@@ -1,0 +1,9 @@
+# robots.txt pour Remote Dev Landing
+User-agent: *
+Allow: /
+
+# Autoriser l'indexation de la landing page
+# (aucune page sensible à exclure)
+
+# Sitemap (optionnel, à ajouter si tu crées un sitemap.xml)
+# Sitemap: https://votre-domaine.com/sitemap.xml

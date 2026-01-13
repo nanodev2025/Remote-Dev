@@ -12,14 +12,13 @@ Bot Telegram open‑source qui te permet de piloter des modifications de code de
 ## Structure
 ```
 .
-├── main.py
-├── requirements.txt
+├── main.py                  # Point d'entrée du bot
+├── requirements.txt         # Dépendances Python
 ├── src/
-│   ├── bot.py
-│   ├── ai_handler.py
-│   └── git_manager.py
-├── landing/                 # landing page React (Vite + Tailwind)
-└── dot-env.example          # template à copier en `.env` (voir section Configuration)
+│   ├── bot.py              # Serveur Telegram bot
+│   ├── ai_handler.py       # Gestion des API IA
+│   └── git_manager.py      # Opérations Git automatisées
+└── dot-env.example          # Template à copier en `.env`
 ```
 
 ## Prérequis
@@ -37,19 +36,25 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Configuration (Zero Data Leak)
+## Configuration
 1) Copie le template :
 ```bash
 cp dot-env.example .env
 ```
 
 2) Édite `.env` et remplis :
-- `TELEGRAM_TOKEN`
-- `ALLOWED_USER_ID`
-- (recommandé) `ACCESS_PIN`
-- ton provider IA (`AI_PROVIDER`) + la clé associée
-- `GITHUB_REPO_URL` (optionnel mais utile)
-- `WORKSPACE_PATH` (par défaut `.`)
+- `TELEGRAM_TOKEN` : Token fourni par @BotFather
+- `ALLOWED_USER_ID` : Ton ID Telegram (utilise @userinfobot)
+- (recommandé) `ACCESS_PIN` : Code PIN optionnel pour sécurité renforcée
+- `AI_PROVIDER` : Choisis un provider (`gemini`, `groq`, `openai`, `anthropic`, ou `ollama`)
+- Clé API selon le provider :
+  - `GEMINI_API_KEY` (gratuit via [Google AI Studio](https://aistudio.google.com/apikey))
+  - `GROQ_API_KEY` (gratuit via [Groq Console](https://console.groq.com/keys))
+  - `OPENAI_API_KEY` (payant)
+  - `ANTHROPIC_API_KEY` (payant)
+  - Aucune clé pour `ollama` (local)
+- `GITHUB_REPO_URL` (optionnel mais utile pour les liens de commit)
+- `WORKSPACE_PATH` (optionnel, par défaut `.`)
 
 > `.env` est ignoré par Git via `.gitignore`. Ne le commit jamais.
 
@@ -80,12 +85,11 @@ git remote add origin https://github.com/<user>/<repo>.git
 ```
 2) Assure-toi que l’auth est OK (SSH ou HTTPS token) puis utilise `/deploy`.
 
-## Landing page (React)
-```bash
-cd landing
-npm install
-npm run dev
-```
+## Landing page (optionnel)
+
+Ce repo contient également une landing page React dans le dossier `landing/`, utilisée pour présenter le projet. Elle n'est **pas nécessaire** pour utiliser le bot.
+
+> **Note** : Le dossier `landing/` est exclu des archives ZIP GitHub (via `.gitattributes`) pour garder le téléchargement focalisé sur le bot. Il reste disponible dans le repo pour un éventuel déploiement web.
 
 ## Open Source checklist
 - `.env` ignoré (`.gitignore`)

@@ -1,6 +1,6 @@
 """
 AI Handler - Transforme les instructions en modifications de fichiers
-Supporte OpenAI et Anthropic (Claude)
+Supporte plusieurs providers IA : Gemini (Google), Groq, OpenAI, Anthropic (Claude), Ollama (local)
 """
 
 import os
@@ -80,12 +80,12 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
 }
 """
 
-    def __init__(self, provider: str = "anthropic", workspace_path: str = "."):
+    def __init__(self, provider: str = "gemini", workspace_path: str = "."):
         """
         Initialise le handler IA.
         
         Args:
-            provider: "openai" ou "anthropic"
+            provider: "gemini", "groq", "openai", "anthropic" ou "ollama"
             workspace_path: Chemin vers le répertoire de travail
         """
         self.provider = AIProvider(provider.lower())

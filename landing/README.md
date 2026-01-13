@@ -1,4 +1,4 @@
-## Cursor Remote Dev — Landing (React + Vite + Tailwind)
+## Remote Dev — Landing (React + Vite + Tailwind)
 
 ### Démarrage
 
@@ -13,7 +13,7 @@ npm run dev
 
 ### Assets (placeholders)
 Dans `landing/public/` :
-- `image-hero.png`
+- `illu-hero.jpg` (image hero principale)
 - `icon-send.png`, `icon-code.png`, `icon-preview.png`, `icon-github.png`
 - `icon-productivity.png`, `icon-ai.png`, `icon-flexibility.png`
 - `og-image.webp` (Open Graph)
@@ -21,4 +21,3 @@ Dans `landing/public/` :
 ### SEO
 Dans `landing/index.html` :
 - `title`, `meta description`, Open Graph, favicon
-

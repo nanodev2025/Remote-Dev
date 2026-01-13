@@ -1,0 +1,14 @@
+# Configuration Git pour export-ignore
+# Le dossier landing/ est exclu des archives ZIP GitHub
+# mais reste accessible pour Vercel/GH Pages via Git
+
+# Exclure landing/ des archives ZIP téléchargeables
+landing/ export-ignore
+landing/** export-ignore
+
+# Exclure aussi les fichiers de build/node_modules
+landing/node_modules/ export-ignore
+landing/dist/ export-ignore
+landing/build/ export-ignore
+landing/.vite/ export-ignore
+landing/package-lock.json export-ignore

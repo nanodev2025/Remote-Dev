@@ -23,5 +23,7 @@ export default {
     },
   },
   plugins: [],
+  // Purge CSS activé par défaut en production via content
+  // Minification automatique en production
 }
 

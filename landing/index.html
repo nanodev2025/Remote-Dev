@@ -4,16 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Cursor Remote Dev — Développez depuis n’importe où</title>
+    <title>Remote Dev — Développez depuis n’importe où</title>
     <meta
       name="description"
-      content="Cursor Remote Dev : votre environnement de développement dans la poche, piloté par Telegram. Envoyez une instruction, le bot modifie le code, preview instantanée, push GitHub automatique."
+      content="Remote Dev : votre environnement de développement dans la poche, piloté par Telegram. Envoyez une instruction, le bot modifie le code, preview instantanée, push GitHub automatique."
     />
-    <meta name="theme-color" content="#0B1220" />
+    <meta name="theme-color" content="#FFFFFF" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Cursor Remote Dev — Développez depuis n’importe où" />
+    <meta property="og:title" content="Remote Dev — Développez depuis n’importe où" />
     <meta
       property="og:description"
       content="Votre environnement de développement dans la poche, piloté par Telegram."
@@ -23,10 +23,18 @@
 
     <!-- Favicon placeholder -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    
+    <!-- Security headers (via Vercel ou serveur) -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    
+    <!-- Preconnect pour améliorer les performances -->
+    <link rel="preconnect" href="https://github.com" crossorigin />
+    <link rel="preconnect" href="https://t.me" crossorigin />
   </head>
-  <body class="bg-slate-950 text-slate-50 antialiased">
+  <body class="bg-white text-slate-900 antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-
