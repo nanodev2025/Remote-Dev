@@ -42,42 +42,68 @@ class AIResponse:
 class AIHandler:
     """Gère les appels à l'API IA pour interpréter les instructions."""
 
-    SYSTEM_PROMPT = """Tu es un assistant de développement expert. Tu reçois des instructions en langage naturel et tu dois les transformer en opérations concrètes sur des fichiers de code.
+    SYSTEM_PROMPT = """Tu es un assistant de développement expert et expérimenté. Tu reçois des instructions en langage naturel et tu dois les transformer en opérations concrètes et de qualité sur des fichiers de code.
 
-Tu travailles sur un projet Python situé dans le répertoire de travail. Voici la structure actuelle des fichiers que tu peux modifier.
+Tu travailles sur un projet situé dans le répertoire de travail. Tu as accès à la structure complète des fichiers et tu peux les modifier, créer ou supprimer.
 
-RÈGLES IMPORTANTES:
-1. Réponds UNIQUEMENT en JSON valide
-2. Ne modifie que les fichiers nécessaires
-3. Fournis le contenu COMPLET des fichiers modifiés ou créés
-4. Sois précis et concis dans tes explications
+🎯 TON RÔLE:
+- Analyser attentivement chaque instruction
+- Comprendre le contexte et les besoins réels
+- Produire du code de qualité, propre et bien structuré
+- Suivre les meilleures pratiques du langage utilisé
+- Ajouter des commentaires pertinents quand nécessaire
+- Gérer les erreurs et cas limites
 
-FORMAT DE RÉPONSE JSON:
+📋 RÈGLES CRITIQUES:
+1. Réponds UNIQUEMENT en JSON valide (pas de markdown, pas de texte avant/après)
+2. Ne modifie que les fichiers strictement nécessaires
+3. Fournis le contenu COMPLET des fichiers modifiés ou créés (pas juste les changements)
+4. Sois précis, détaillé et professionnel dans tes explications
+5. Respecte le style de code existant si tu modifies un fichier
+6. Assure-toi que le code est fonctionnel et sans erreurs de syntaxe
+7. Pour les sites web, crée une structure complète et moderne (HTML, CSS, JS si nécessaire)
+
+🚨 RÈGLE ABSOLUE POUR LES CHEMINS DE FICHIERS:
+- Les chemins doivent TOUJOURS commencer directement par le nom du fichier ou un sous-dossier (ex: "index.html", "style.css", "src/app.py")
+- JAMAIS inclure le nom du dossier parent du workspace dans le chemin
+- Exemples CORRECTS: "index.html", "style.css", "src/main.js", "assets/logo.png"
+- Exemples INCORRECTS: "remotecode/index.html", "remotecode/style.css", "remotecode/remotecode/index.html"
+- Si tu vois un chemin qui commence par le nom du workspace, supprime ce préfixe
+
+📝 FORMAT DE RÉPONSE JSON (STRICT):
 {
     "success": true,
-    "explanation": "Description courte de ce qui a été fait",
+    "explanation": "Description détaillée et claire de ce qui a été fait, pourquoi, et comment l'utiliser",
     "operations": [
         {
             "action": "create|modify|delete",
-            "file_path": "chemin/relatif/fichier.py",
-            "content": "contenu complet du fichier si create ou modify",
-            "description": "description de l'opération"
+            "file_path": "chemin/relatif/fichier.ext",
+            "content": "contenu COMPLET du fichier si create ou modify (avec toutes les balises, imports, etc.)",
+            "description": "description précise de l'opération effectuée"
         }
     ]
 }
 
-EXEMPLES D'ACTIONS:
-- "create": Créer un nouveau fichier
-- "modify": Modifier un fichier existant (fournir le contenu complet)
+🔧 EXEMPLES D'ACTIONS:
+- "create": Créer un nouveau fichier avec tout son contenu complet
+- "modify": Modifier un fichier existant (fournir le contenu COMPLET du fichier modifié, pas juste les changements)
 - "delete": Supprimer un fichier
 
-Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
+⚠️ EN CAS D'ERREUR:
 {
     "success": false,
-    "explanation": "Explication du problème",
+    "explanation": "Explication détaillée du problème rencontré",
     "operations": [],
-    "error": "Description de l'erreur"
+    "error": "Description précise de l'erreur et suggestions pour la résoudre"
 }
+
+💡 CONSEILS POUR UN BON CODE:
+- Code propre et lisible
+- Nommage explicite et cohérent
+- Structure logique et organisée
+- Gestion d'erreurs appropriée
+- Documentation/commentaires utiles
+- Respect des conventions du langage
 """
 
     def __init__(self, provider: str = "gemini", workspace_path: str = "."):
@@ -122,8 +148,9 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
                 api_key=api_key,
                 base_url="https://api.groq.com/openai/v1"
             )
-            self.model = "llama-3.3-70b-versatile"
-            logger.info("✅ Client Groq initialisé (gratuit!)")
+            # Utiliser le meilleur modèle disponible (llama-3.1-70b-versatile est plus récent et performant)
+            self.model = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+            logger.info(f"✅ Client Groq initialisé (modèle: {self.model})")
         
         elif self.provider == AIProvider.OLLAMA:
             from openai import OpenAI
@@ -182,19 +209,64 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
 
     def _build_context(self, instruction: str, relevant_files: List[str] = None) -> str:
         """Construit le contexte pour l'IA."""
+        workspace_name = os.path.basename(os.path.abspath(self.workspace_path))
         context_parts = [
-            f"📂 STRUCTURE DU PROJET:\n{self._get_workspace_structure()}",
-            f"\n📝 INSTRUCTION:\n{instruction}"
+            f"📂 STRUCTURE DU PROJET (répertoire de travail: {workspace_name}):\n{self._get_workspace_structure()}",
+            f"\n📝 INSTRUCTION UTILISATEUR:\n{instruction}",
+            f"\n🚨 RÈGLE ABSOLUE POUR LES CHEMINS DE FICHIERS:",
+            f"- Les chemins doivent TOUJOURS commencer directement par le nom du fichier ou un sous-dossier",
+            f"- Exemples CORRECTS: 'index.html', 'style.css', 'src/app.py', 'assets/logo.png'",
+            f"- Exemples INCORRECTS (À ÉVITER): '{workspace_name}/index.html', '{workspace_name}/{workspace_name}/index.html'",
+            f"- Si tu vois '{workspace_name}' dans un chemin, supprime ce préfixe complètement",
+            f"- Les fichiers doivent être créés/modifiés directement à la racine du workspace ou dans des sous-dossiers normaux",
+            f"\n💡 AUTRES INSTRUCTIONS:",
+            f"- Analyse bien l'instruction, comprends ce qui est demandé, et produit un code de qualité professionnelle."
         ]
         
         # Ajouter le contenu des fichiers pertinents
         if relevant_files:
+            context_parts.append(f"\n📄 FICHIERS PERTINENTS À CONSIDÉRER:")
             for file_path in relevant_files:
                 content = self._get_file_content(file_path)
                 if content:
-                    context_parts.append(f"\n📄 FICHIER {file_path}:\n```\n{content}\n```")
+                    context_parts.append(f"\n📄 {file_path}:\n```\n{content}\n```")
+                else:
+                    context_parts.append(f"\n⚠️ {file_path}: fichier non trouvé")
+        else:
+            # Si aucun fichier spécifique, inclure les fichiers principaux du projet
+            main_files = self._find_main_files()
+            if main_files:
+                context_parts.append(f"\n📄 FICHIERS PRINCIPAUX DU PROJET:")
+                for file_path in main_files[:5]:  # Limiter à 5 fichiers pour ne pas surcharger
+                    content = self._get_file_content(file_path)
+                    if content:
+                        # Limiter la taille du contenu pour ne pas dépasser les limites
+                        if len(content) > 2000:
+                            content = content[:2000] + "\n... (tronqué)"
+                        context_parts.append(f"\n📄 {file_path}:\n```\n{content}\n```")
         
         return "\n".join(context_parts)
+    
+    def _find_main_files(self) -> List[str]:
+        """Trouve les fichiers principaux du projet (index.html, main.py, app.py, etc.)."""
+        main_patterns = [
+            "index.html", "index.js", "index.jsx", "index.ts", "index.tsx",
+            "main.py", "app.py", "main.js", "app.js", "App.jsx", "App.tsx",
+            "package.json", "requirements.txt", "README.md"
+        ]
+        
+        found_files = []
+        for root, dirs, files in os.walk(self.workspace_path):
+            # Ignorer les dossiers cachés et dépendances
+            if any(skip in root for skip in ['.git', 'node_modules', 'venv', '__pycache__', '.']):
+                continue
+            
+            for file in files:
+                if file in main_patterns:
+                    rel_path = os.path.relpath(os.path.join(root, file), self.workspace_path)
+                    found_files.append(rel_path)
+        
+        return found_files
 
     async def process_instruction(
         self, 
@@ -251,8 +323,12 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
         return await asyncio.get_event_loop().run_in_executor(None, sync_call)
 
     async def _call_openai(self, context: str) -> str:
-        """Appelle l'API OpenAI."""
+        """Appelle l'API OpenAI (utilisé aussi pour Groq et Ollama)."""
         import asyncio
+        
+        # Paramètres améliorés pour de meilleurs résultats
+        temperature = float(os.getenv("AI_TEMPERATURE", "0.7"))  # 0.7 = équilibre créativité/précision
+        max_tokens = int(os.getenv("AI_MAX_OUTPUT_TOKENS", "8192"))  # Plus de tokens pour des réponses complètes
         
         def sync_call():
             response = self.client.chat.completions.create(
@@ -261,7 +337,9 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": context}
                 ],
-                max_tokens=4096,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=0.9,  # Nucleus sampling pour plus de diversité
                 response_format={"type": "json_object"}
             )
             return response.choices[0].message.content
@@ -278,7 +356,8 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
             ResourceExhausted = None  # type: ignore
         
         full_prompt = f"{self.SYSTEM_PROMPT}\n\n{context}"
-        max_out = int(os.getenv("AI_MAX_OUTPUT_TOKENS", "2048"))
+        max_out = int(os.getenv("AI_MAX_OUTPUT_TOKENS", "8192"))  # Plus de tokens pour Gemini aussi
+        temperature = float(os.getenv("AI_TEMPERATURE", "0.7"))
         
         def sync_call():
             try:
@@ -287,6 +366,8 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
                     generation_config={
                         "response_mime_type": "application/json",
                         "max_output_tokens": max_out,
+                        "temperature": temperature,  # Ajouter température pour Gemini
+                        "top_p": 0.9,
                     },
                 )
 
@@ -352,6 +433,42 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
                 error=f"Erreur de parsing: {str(e)}\nRéponse: {response_text[:200]}"
             )
 
+    def _normalize_file_path(self, file_path: str) -> str:
+        """
+        Normalise le chemin du fichier pour éviter les sous-dossiers récursifs.
+        Supprime les préfixes qui correspondent au nom du workspace.
+        
+        Args:
+            file_path: Chemin du fichier à normaliser
+            
+        Returns:
+            Chemin normalisé
+        """
+        workspace_name = os.path.basename(os.path.abspath(self.workspace_path))
+        
+        # Nettoyer le chemin
+        path = file_path.strip()
+        
+        # Supprimer les préfixes répétitifs du nom du workspace
+        # Ex: "remotecode/remotecode/index.html" -> "index.html"
+        # Ex: "remotecode/index.html" -> "index.html"
+        while path.startswith(f"{workspace_name}/"):
+            path = path[len(f"{workspace_name}/"):]
+        
+        # Supprimer les slashes en début de chemin
+        path = path.lstrip("/")
+        
+        # Si le chemin est vide après nettoyage, utiliser juste le nom du fichier
+        if not path or path == workspace_name:
+            # Extraire le nom du fichier si possible
+            original_path = file_path.strip().lstrip("/")
+            if "/" in original_path:
+                path = "/".join(original_path.split("/")[-2:])  # Garder au plus 2 niveaux
+            else:
+                path = original_path
+        
+        return path
+
     def apply_operations(self, operations: List[FileOperation]) -> List[Dict[str, Any]]:
         """
         Applique les opérations sur les fichiers.
@@ -365,8 +482,11 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
         results = []
         
         for op in operations:
-            result = {"file": op.file_path, "action": op.action, "success": False, "error": None}
-            full_path = os.path.join(self.workspace_path, op.file_path)
+            # Normaliser le chemin pour éviter les sous-dossiers récursifs
+            normalized_path = self._normalize_file_path(op.file_path)
+            
+            result = {"file": normalized_path, "action": op.action, "success": False, "error": None}
+            full_path = os.path.join(self.workspace_path, normalized_path)
             
             try:
                 if op.action == "delete":

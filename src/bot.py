@@ -224,7 +224,7 @@ class TelegramBot:
         if success and self.github_url:
             commit_url = self.git_manager.get_last_commit_url(self.github_url)
             if commit_url:
-                report += f"\n\n🔗 [Voir le commit]({commit_url})"
+                report += f"\n\n🔗 {commit_url}"
         
         await update.message.reply_text(
             report,

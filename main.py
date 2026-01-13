@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 MyBotCursor - Agent de déploiement piloté par Telegram
 Point d'entrée principal

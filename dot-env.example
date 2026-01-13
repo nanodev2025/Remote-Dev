@@ -57,8 +57,16 @@ ACCESS_PIN=
 # OLLAMA_URL=http://localhost:11434/v1
 # OLLAMA_MODEL=llama3.2
 
-# Optionnel: limite tokens de sortie (réduit coût/latence)
-AI_MAX_OUTPUT_TOKENS=2048
+# Optionnel: limite tokens de sortie (défaut: 8192 pour meilleure qualité)
+AI_MAX_OUTPUT_TOKENS=8192
+
+# Optionnel: température pour la créativité (0.0-1.0, défaut: 0.7)
+# Plus élevé = plus créatif, plus bas = plus précis
+AI_TEMPERATURE=0.7
+
+# Optionnel: modèle Groq spécifique (défaut: llama-3.1-70b-versatile)
+# Autres options: llama-3.3-70b-versatile, mixtral-8x7b-32768, etc.
+GROQ_MODEL=llama-3.1-70b-versatile
 
 # ============================================
 # 📦 OPTIONNEL (Git & Workspace)

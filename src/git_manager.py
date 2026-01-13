@@ -5,7 +5,7 @@ Gestionnaire Git - Gère les opérations git (add, commit, push)
 import os
 import logging
 from typing import Optional, Tuple
-from git import Repo, InvalidGitRepositoryError, GitCommandError
+from git import Repo, InvalidGitRepositoryError, GitCommandError, BadName
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +135,17 @@ class GitManager:
         
         try:
             # Vérifier s'il y a des changements stagés
-            if not self.repo.index.diff("HEAD"):
+            # Pour le premier commit, HEAD n'existe pas, donc on vérifie différemment
+            has_staged_changes = False
+            try:
+                # Essayer de vérifier avec HEAD si des commits existent
+                staged_changes = list(self.repo.index.diff("HEAD"))
+                has_staged_changes = len(staged_changes) > 0
+            except (ValueError, BadName):
+                # Si HEAD n'existe pas (premier commit), vérifier directement les entrées de l'index
+                has_staged_changes = len(self.repo.index.entries) > 0
+            
+            if not has_staged_changes:
                 return False, "⚠️ Aucun changement à commiter"
             
             commit = self.repo.index.commit(message)
@@ -144,6 +154,9 @@ class GitManager:
             return True, f"✅ Commit: {commit_hash}"
         except GitCommandError as e:
             logger.error(f"❌ Erreur lors du commit: {e}")
+            return False, f"❌ Erreur: {str(e)}"
+        except Exception as e:
+            logger.error(f"❌ Erreur inattendue lors du commit: {e}")
             return False, f"❌ Erreur: {str(e)}"
 
     def push(self) -> Tuple[bool, str]:
@@ -157,17 +170,58 @@ class GitManager:
             return False, "❌ Dépôt non initialisé"
         
         try:
-            origin = self.repo.remote("origin")
-            push_info = origin.push(self.branch)
+            # Vérifier que la branche locale existe
+            try:
+                branch_ref = self.repo.heads[self.branch]
+            except (IndexError, AttributeError):
+                # Si la branche n'existe pas localement, utiliser la branche actuelle
+                current_branch = self.repo.active_branch.name
+                logger.warning(f"⚠️ Branche '{self.branch}' introuvable, utilisation de '{current_branch}'")
+                branch_ref = self.repo.heads[current_branch]
+                self.branch = current_branch
             
+            origin = self.repo.remote("origin")
+            
+            # Vérifier si c'est le premier push (pas de branche distante)
+            try:
+                origin.fetch()
+                remote_ref = f"origin/{self.branch}"
+                # Si la branche distante n'existe pas, utiliser set_upstream
+                if remote_ref not in [ref.name for ref in self.repo.refs]:
+                    logger.info(f"🆕 Premier push vers {self.branch}, configuration upstream...")
+                    push_info = origin.push(branch_ref, set_upstream=True)
+                else:
+                    push_info = origin.push(branch_ref)
+            except Exception:
+                # Si fetch échoue, essayer directement avec set_upstream
+                logger.info(f"🆕 Premier push vers {self.branch}, configuration upstream...")
+                push_info = origin.push(branch_ref, set_upstream=True)
+            
+            # Vérifier les résultats du push
             for info in push_info:
                 if info.flags & info.ERROR:
-                    return False, f"❌ Erreur push: {info.summary}"
+                    error_msg = info.summary or str(info)
+                    logger.error(f"❌ Erreur push: {error_msg}")
+                    return False, f"❌ Erreur push: {error_msg}"
+                elif info.flags & info.REJECTED:
+                    logger.error(f"❌ Push rejeté: {info.summary}")
+                    return False, f"❌ Push rejeté: {info.summary}"
             
             logger.info(f"✅ Push réussi vers {self.branch}")
             return True, f"✅ Push vers origin/{self.branch} réussi"
         except GitCommandError as e:
-            logger.error(f"❌ Erreur lors du push: {e}")
+            error_msg = str(e)
+            logger.error(f"❌ Erreur lors du push: {error_msg}")
+            
+            # Messages d'erreur plus explicites
+            if "authentication" in error_msg.lower() or "permission" in error_msg.lower():
+                return False, "❌ Erreur d'authentification. Vérifiez vos credentials Git."
+            elif "not found" in error_msg.lower() or "does not exist" in error_msg.lower():
+                return False, f"❌ Branche '{self.branch}' introuvable sur le remote."
+            else:
+                return False, f"❌ Erreur: {error_msg}"
+        except Exception as e:
+            logger.error(f"❌ Erreur inattendue lors du push: {e}")
             return False, f"❌ Erreur: {str(e)}"
 
     def deploy(self, commit_message: str = "Update via Mobile Telegram") -> Tuple[bool, str]:
@@ -218,10 +272,34 @@ class GitManager:
             return ""
         
         try:
-            commit_hash = self.repo.head.commit.hexsha
+            commit_hash_full = self.repo.head.commit.hexsha
+            # Utiliser un hash court (7 caractères) pour l'URL GitHub
+            commit_hash = commit_hash_full[:7]
+            
             # Nettoyer l'URL GitHub
-            base_url = github_url.rstrip(".git").rstrip("/")
-            return f"{base_url}/commit/{commit_hash}"
+            # Supprimer .git à la fin si présent
+            base_url = github_url.rstrip(".git")
+            # Supprimer le slash final si présent
+            base_url = base_url.rstrip("/")
+            
+            # S'assurer que l'URL est bien formatée
+            # Si l'URL contient déjà /commit/, on la nettoie
+            if "/commit/" in base_url:
+                base_url = base_url.split("/commit/")[0]
+            
+            # Supprimer tout hash existant à la fin de l'URL
+            # Au cas où l'URL contiendrait déjà un hash
+            if len(base_url.split("/")[-1]) == 40 or len(base_url.split("/")[-1]) == 7:
+                # Si le dernier segment ressemble à un hash, le supprimer
+                parts = base_url.split("/")
+                if parts[-1] and (len(parts[-1]) == 40 or (len(parts[-1]) == 7 and all(c in '0123456789abcdef' for c in parts[-1].lower()))):
+                    base_url = "/".join(parts[:-1])
+            
+            # Construire l'URL du commit
+            commit_url = f"{base_url}/commit/{commit_hash}"
+            
+            logger.info(f"🔗 URL générée: {commit_url}")
+            return commit_url
         except Exception as e:
             logger.error(f"Erreur lors de la génération de l'URL: {e}")
             return ""
