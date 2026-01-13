@@ -66,6 +66,7 @@ def validate_env() -> dict:
     return {
         "telegram_token": required_vars["TELEGRAM_TOKEN"],
         "allowed_user_id": int(required_vars["ALLOWED_USER_ID"]),
+        "access_pin": (os.getenv("ACCESS_PIN") or "").strip() or None,
         "ai_provider": ai_provider,
         "git_branch": os.getenv("GIT_BRANCH", "main"),
         "github_url": os.getenv("GITHUB_REPO_URL", ""),
@@ -119,7 +120,8 @@ def main():
             allowed_user_id=config["allowed_user_id"],
             ai_handler=ai_handler,
             git_manager=git_manager,
-            github_url=config["github_url"]
+            github_url=config["github_url"],
+            access_pin=config["access_pin"],
         )
         
         logger.info("🚀 Démarrage du bot Telegram...")

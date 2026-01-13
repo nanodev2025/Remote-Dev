@@ -8,8 +8,18 @@ __pycache__/
 venv/
 .venv/
 
-# Env secrets
-.env
+# Node / React
+node_modules/
+dist/
+build/
+landing/node_modules/
+landing/dist/
+landing/build/
+package-lock.json
+
+# Env secrets (ignore all .env* except the example template)
+.env*
+!.env.example
 
 # Logs
 *.log
@@ -18,4 +28,8 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# Misc
+.pytest_cache/
+.mypy_cache/
 

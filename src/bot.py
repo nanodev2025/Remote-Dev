@@ -4,6 +4,7 @@ Bot Telegram - Serveur qui écoute les messages et orchestre les modifications
 
 import os
 import logging
+import time
 from typing import Optional
 from functools import wraps
 
@@ -34,6 +35,19 @@ def authorized_only(func):
                 "🚫 Accès refusé. Tu n'es pas autorisé à utiliser ce bot."
             )
             return
+
+        # Deuxième facteur optionnel: PIN (si ACCESS_PIN est défini)
+        if self.access_pin and not self._is_pin_verified():
+            # Autoriser /start, /help et /id même sans PIN
+            cmd = (update.message.text or "").split()[0].lower() if update.message else ""
+            if cmd not in ("/start", "/help", "/id", "/pin"):
+                await update.message.reply_text(
+                    "🔐 **PIN requis**\n\n"
+                    "Envoie `/pin <ton_code>` pour déverrouiller l'accès.",
+                    parse_mode=ParseMode.MARKDOWN
+                )
+                return
+
         return await func(self, update, context)
     return wrapper
 
@@ -47,7 +61,9 @@ class TelegramBot:
         allowed_user_id: int,
         ai_handler: AIHandler,
         git_manager: GitManager,
-        github_url: str = ""
+        github_url: str = "",
+        access_pin: Optional[str] = None,
+        pin_ttl_seconds: int = 12 * 60 * 60,  # 12h
     ):
         """
         Initialise le bot Telegram.
@@ -65,8 +81,26 @@ class TelegramBot:
         self.git_manager = git_manager
         self.github_url = github_url
         self.app: Optional[Application] = None
+
+        # PIN optionnel
+        self.access_pin = (access_pin or os.getenv("ACCESS_PIN") or "").strip() or None
+        self.pin_ttl_seconds = pin_ttl_seconds
+        self._pin_verified_until: Optional[float] = None
         
         logger.info(f"🤖 Bot initialisé pour l'utilisateur: {allowed_user_id}")
+
+    def _is_pin_verified(self) -> bool:
+        """Retourne True si le PIN est vérifié et encore valide."""
+        if not self.access_pin:
+            return True
+        if not self._pin_verified_until:
+            return False
+        return time.time() < self._pin_verified_until
+
+    def _mark_pin_verified(self) -> None:
+        if not self.access_pin:
+            return
+        self._pin_verified_until = time.time() + self.pin_ttl_seconds
 
     def _setup_handlers(self) -> None:
         """Configure les handlers de commandes et messages."""
@@ -78,6 +112,7 @@ class TelegramBot:
         self.app.add_handler(CommandHandler("deploy", self._cmd_deploy))
         self.app.add_handler(CommandHandler("reset", self._cmd_reset))
         self.app.add_handler(CommandHandler("id", self._cmd_id))
+        self.app.add_handler(CommandHandler("pin", self._cmd_pin))
         
         # Messages texte (instructions)
         self.app.add_handler(
@@ -95,10 +130,17 @@ class TelegramBot:
         is_authorized = user.id == self.allowed_user_id
         
         if is_authorized:
+            pin_line = ""
+            if self.access_pin:
+                pin_line = (
+                    "\n🔐 **PIN activé** : envoie `/pin <ton_code>` pour déverrouiller "
+                    f"(valide {self.pin_ttl_seconds//3600}h).\n"
+                )
             await update.message.reply_text(
                 f"👋 Salut {user.first_name}!\n\n"
                 "🚀 Je suis ton agent de déploiement. Envoie-moi des instructions "
                 "en langage naturel et je modifierai ton code.\n\n"
+                f"{pin_line}\n"
                 "📝 Exemples:\n"
                 "• \"Ajoute une fonction hello_world dans main.py\"\n"
                 "• \"Crée un fichier utils/helpers.py avec des fonctions utilitaires\"\n"
@@ -115,6 +157,9 @@ class TelegramBot:
     @authorized_only
     async def _cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Commande /help - Liste des commandes."""
+        pin_help = ""
+        if self.access_pin:
+            pin_help = "🔹 /pin <code> - Déverrouiller l'accès avec le PIN\n"
         await update.message.reply_text(
             "📚 **Commandes disponibles:**\n\n"
             "🔹 /start - Message de bienvenue\n"
@@ -123,11 +168,28 @@ class TelegramBot:
             "🔹 /diff - Voir les modifications en attente\n"
             "🔹 /deploy - Commit et push les modifications\n"
             "🔹 /reset - Annuler toutes les modifications\n"
-            "🔹 /id - Afficher ton ID Telegram\n\n"
+            "🔹 /id - Afficher ton ID Telegram\n"
+            f"{pin_help}\n"
             "💬 **Pour modifier le code:**\n"
             "Envoie simplement un message décrivant ce que tu veux faire!",
             parse_mode=ParseMode.MARKDOWN
         )
+
+    @authorized_only
+    async def _cmd_pin(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Commande /pin - Vérifie le PIN et déverrouille l'accès."""
+        if not self.access_pin:
+            await update.message.reply_text("ℹ️ Aucun PIN n'est configuré côté serveur.")
+            return
+        provided = " ".join(context.args).strip() if context.args else ""
+        if not provided:
+            await update.message.reply_text("🔐 Usage: `/pin <ton_code>`", parse_mode=ParseMode.MARKDOWN)
+            return
+        if provided != self.access_pin:
+            await update.message.reply_text("❌ PIN incorrect.")
+            return
+        self._mark_pin_verified()
+        await update.message.reply_text("✅ PIN validé. Accès déverrouillé.")
 
     @authorized_only
     async def _cmd_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

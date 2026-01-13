@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Petit polish “flat + moderne” */
+:root {
+  color-scheme: dark;
+}
+
+/* Sélection */
+::selection {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+/* Gradient “grain” discret */
+.bg-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.10) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+

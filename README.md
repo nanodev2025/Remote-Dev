@@ -1,171 +1,96 @@
-# 🤖 MyBotCursor - Agent de Déploiement Telegram
+# Cursor Remote Dev — Telegram‑driven code & deploy agent
 
-Un bot Telegram intelligent qui te permet de modifier ton code depuis ton mobile en utilisant des instructions en langage naturel, puis de déployer automatiquement les changements via Git.
+Bot Telegram open‑source qui te permet de piloter des modifications de code depuis ton mobile, puis de versionner (commit) et publier (push) automatiquement.
 
-## ✨ Fonctionnalités
+## Fonctionnalités
+- **Télécommande via Telegram** : envoie une instruction en langage naturel.
+- **Interpréteur IA** : transforme l’instruction en opérations de fichiers (create/modify/delete).
+- **Git automatisé** : diff, reset, commit & push (si tout a réussi).
+- **Feedback** : résumé + diff, et lien vers le commit si `GITHUB_REPO_URL` est fourni.
+- **Sécurité** : verrouillage par `ALLOWED_USER_ID` + **PIN optionnel** (`ACCESS_PIN`).
 
-- 📱 **Contrôle depuis Telegram** - Envoie des instructions depuis ton mobile
-- 🧠 **IA intégrée** - Utilise Claude (Anthropic) ou GPT-4 (OpenAI) pour interpréter tes instructions
-- 🔐 **Sécurisé** - Accès restreint par ID utilisateur Telegram
-- 🔄 **Git automatisé** - Add, commit et push automatiques
-- 📊 **Feedback en temps réel** - Diff du code et liens vers les commits
-- ↩️ **Rollback sécurisé** - Annulation automatique en cas d'erreur
-
-## 📁 Structure du Projet
-
+## Structure
 ```
-MyBotCursor/
-├── main.py              # Point d'entrée
-├── requirements.txt     # Dépendances Python
-├── env.example          # Template de configuration
-├── README.md            # Documentation
-└── src/
-    ├── __init__.py
-    ├── bot.py           # Serveur Bot Telegram
-    ├── ai_handler.py    # Logique IA (OpenAI/Claude)
-    └── git_manager.py   # Gestionnaire Git
+.
+├── main.py
+├── requirements.txt
+├── src/
+│   ├── bot.py
+│   ├── ai_handler.py
+│   └── git_manager.py
+├── landing/                 # landing page React (Vite + Tailwind)
+└── dot-env.example          # template à copier en `.env` (voir section Configuration)
 ```
 
-## 🚀 Installation
+## Prérequis
+- Python **3.11+** (recommandé)
+- Un dépôt Git (local) avec un remote `origin` si tu veux push
+- Un bot Telegram (via `@BotFather`)
 
-### 1. Cloner et configurer l'environnement
-
+## Installation (bot)
 ```bash
-cd /Users/EvilCorp/Documents/Dev/MyBotCursor
+git clone <ton-repo>
+cd <ton-repo>
 
-# Créer un environnement virtuel
 python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou: venv\Scripts\activate  # Windows
-
-# Installer les dépendances
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configurer les variables d'environnement
-
+## Configuration (Zero Data Leak)
+1) Copie le template :
 ```bash
-# Copier le template
-cp env.example .env
-
-# Éditer le fichier .env avec tes valeurs
-nano .env
+cp dot-env.example .env
 ```
 
-### 3. Obtenir les tokens nécessaires
+2) Édite `.env` et remplis :
+- `TELEGRAM_TOKEN`
+- `ALLOWED_USER_ID`
+- (recommandé) `ACCESS_PIN`
+- ton provider IA (`AI_PROVIDER`) + la clé associée
+- `GITHUB_REPO_URL` (optionnel mais utile)
+- `WORKSPACE_PATH` (par défaut `.`)
 
-#### Token Telegram
-1. Ouvre [@BotFather](https://t.me/BotFather) sur Telegram
-2. Envoie `/newbot` et suis les instructions
-3. Copie le token fourni
+> `.env` est ignoré par Git via `.gitignore`. Ne le commit jamais.
 
-#### Ton ID Telegram
-1. Ouvre [@userinfobot](https://t.me/userinfobot) sur Telegram
-2. Envoie `/start`
-3. Note ton ID utilisateur
-
-#### Clé API IA
-- **Anthropic (Claude)**: [console.anthropic.com](https://console.anthropic.com/)
-- **OpenAI (GPT-4)**: [platform.openai.com](https://platform.openai.com/)
-
-### 4. Configurer Git
-
-Assure-toi que ton repo est configuré avec un remote `origin`:
-
-```bash
-git remote -v
-# Si pas de remote:
-git remote add origin https://github.com/ton-username/ton-repo.git
-```
-
-### 5. Lancer le bot
-
+## Démarrage
 ```bash
 python main.py
 ```
 
-## 📱 Utilisation
+## Commandes Telegram
+- `/start` : onboarding
+- `/help` : commandes
+- `/id` : affiche ton user_id
+- `/pin <code>` : déverrouille l’accès si `ACCESS_PIN` est défini
+- `/status` : statut Git
+- `/diff` : diff courant
+- `/reset` : annule les changements non commit
+- `/deploy [message]` : commit & push
 
-### Commandes Telegram
+## Sécurité (user_id + PIN)
+- **Verrouillage user_id** : seules les commandes provenant de `ALLOWED_USER_ID` sont acceptées.
+- **PIN optionnel** : si `ACCESS_PIN` est défini, le bot exige `/pin <code>` avant les actions sensibles.
+- **Zero data leak** : aucune clé/token/chemin personnel n’est hardcodé dans le code ; tout passe par `.env`.
 
-| Commande | Description |
-|----------|-------------|
-| `/start` | Message de bienvenue |
-| `/help` | Liste des commandes |
-| `/status` | Statut Git du projet |
-| `/diff` | Voir les modifications en attente |
-| `/deploy [message]` | Commit et push (message optionnel) |
-| `/reset` | Annuler toutes les modifications |
-| `/id` | Afficher ton ID Telegram |
-
-### Exemples d'instructions
-
+## Lier le bot à ton GitHub
+1) Ajoute un remote :
+```bash
+git remote add origin https://github.com/<user>/<repo>.git
 ```
-Crée un fichier hello.py avec une fonction qui dit bonjour
+2) Assure-toi que l’auth est OK (SSH ou HTTPS token) puis utilise `/deploy`.
 
-Ajoute une méthode calculate_total dans la classe Order
-
-Modifie le fichier config.py pour ajouter une variable DEBUG=True
-
-Corrige le bug dans la fonction parse_date qui ne gère pas les fuseaux horaires
-```
-
-## ⚙️ Configuration (.env)
-
-```env
-# Telegram
-TELEGRAM_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
-ALLOWED_USER_ID=123456789
-
-# IA (choisir un)
-AI_PROVIDER=anthropic  # ou "openai"
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-
-# Git
-GIT_BRANCH=main
-GITHUB_REPO_URL=https://github.com/username/repo
-
-# Workspace
-WORKSPACE_PATH=/chemin/vers/ton/projet
+## Landing page (React)
+```bash
+cd landing
+npm install
+npm run dev
 ```
 
-## 🔒 Sécurité
+## Open Source checklist
+- `.env` ignoré (`.gitignore`)
+- `venv/`, `__pycache__/`, `dist/`, `build/`, `.DS_Store` ignorés
+- template public : `dot-env.example`
 
-- **Authentification**: Seul l'utilisateur avec l'ID spécifié peut utiliser le bot
-- **Pas de push si erreur**: Les modifications ne sont poussées que si tout a réussi
-- **Rollback automatique**: En cas d'erreur, les changements sont annulés
-- **Logs**: Toutes les actions sont enregistrées dans `bot.log`
-
-## 🐛 Dépannage
-
-### Le bot ne répond pas
-- Vérifie que le token Telegram est correct
-- Vérifie que le bot est démarré (`python main.py`)
-
-### "Accès refusé"
-- Vérifie que ton `ALLOWED_USER_ID` correspond à ton ID Telegram
-- Utilise `/id` pour voir ton ID
-
-### Erreur de push Git
-- Vérifie que tu as les droits de push sur le repo
-- Vérifie que le remote `origin` est configuré
-- Assure-toi d'avoir configuré l'authentification Git (SSH ou HTTPS)
-
-### Erreur API IA
-- Vérifie que ta clé API est valide
-- Vérifie que tu as du crédit sur ton compte
-
-## 📝 Logs
-
-Les logs sont écrits dans:
-- Console (stdout)
-- Fichier `bot.log`
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! N'hésite pas à ouvrir une issue ou une PR.
-
-## 📄 Licence
-
-MIT License - Utilise ce code comme tu veux !
+## Licence
+MIT (à ajuster si besoin)
