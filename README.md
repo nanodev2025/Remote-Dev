@@ -103,13 +103,17 @@ Par défaut, le bot modifie les fichiers dans son propre répertoire. Si tu veux
 
 2. **Option 2 : Autre projet Git**
    ```bash
-   # Dans .env :
+   # Dans .env, configure le chemin vers TON propre projet :
    WORKSPACE_PATH=/chemin/vers/ton/projet
    
    # Le projet cible doit être un dépôt Git initialisé :
    cd /chemin/vers/ton/projet
    git init
-   git remote add origin https://github.com/nanodev2025/Remote-Dev.git
+   
+   # ⚠️ IMPORTANT : Ajoute TON propre repository GitHub (pas Remote-Dev !)
+   git remote add origin https://github.com/TON-USERNAME/TON-REPO.git
+   
+   # Le bot modifiera les fichiers de ce projet et poussera vers TON repo
    ```
 
 ### Lancer le bot au démarrage (systemd)
