@@ -209,17 +209,5 @@ Le projet cible doit avoir son propre `remote origin` pointant vers **TON** repo
 ### Authentication
 
 Assure-toi que l'auth Git est OK (SSH ou HTTPS token) puis utilise `/deploy` dans Telegram.
-
-## Landing page (optionnel)
-
-Ce repo contient également une landing page React dans le dossier `landing/`, utilisée pour présenter le projet. Elle n'est **pas nécessaire** pour utiliser le bot.
-
-> **Note** : Le dossier `landing/` est exclu des archives ZIP GitHub (via `.gitattributes`) pour garder le téléchargement focalisé sur le bot. Il reste disponible dans le repo pour un éventuel déploiement web.
-
-## Open Source checklist
-- `.env` ignoré (`.gitignore`)
-- `venv/`, `__pycache__/`, `dist/`, `build/`, `.DS_Store` ignorés
-- template public : `dot-env.example`
-
 ## Licence
 MIT
