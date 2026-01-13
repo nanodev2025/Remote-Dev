@@ -1,58 +1,77 @@
-# Cursor Remote Dev — Telegram Bot (.env)
+# Remote Dev — Telegram Bot (.env)
 # Copie ce fichier en `.env` puis remplis les valeurs.
 #
 # IMPORTANT
 # - Ne commite jamais `.env` (il est ignoré par `.gitignore`).
 # - Ne mets aucun chemin absolu personnel ici. Utilise `.` ou un chemin relatif.
 
+# ============================================
+# ⚙️ CONFIGURATION MINIMALE (obligatoire)
+# ============================================
+
 # -----------------------------
-# Telegram
+# Telegram (OBLIGATOIRE)
 # -----------------------------
 # Token fourni par @BotFather (format: 123456789:ABCdef...)
+# 👉 Crée un bot : https://t.me/BotFather
 TELEGRAM_TOKEN=
 
 # Ton user_id Telegram (ex: via @userinfobot)
+# 👉 Obtiens ton ID : https://t.me/userinfobot
 ALLOWED_USER_ID=
 
-# PIN optionnel (recommandé) : une seconde barrière en plus du user_id.
-# Usage: dans Telegram -> /pin <code>
-ACCESS_PIN=
-
 # -----------------------------
-# IA (choisis UN provider)
+# IA (OBLIGATOIRE - choisis UN provider)
 # -----------------------------
 # Options: gemini | groq | openai | anthropic | ollama
 AI_PROVIDER=gemini
 
-# Gemini (Google AI Studio)
+# Gemini (gratuit) - Recommandé pour débuter
+# 👉 Obtiens ta clé : https://aistudio.google.com/apikey
 GEMINI_API_KEY=
-# Modèle conseillé free-tier (selon les comptes)
 GEMINI_MODEL=models/gemini-flash-lite-latest
 
-# Groq (si dispo)
-GROQ_API_KEY=
+# ============================================
+# 🔒 OPTIONNEL (sécurité renforcée)
+# ============================================
 
-# OpenAI
-OPENAI_API_KEY=
+# PIN optionnel : une seconde barrière en plus du user_id.
+# Usage: dans Telegram -> /pin <code>
+ACCESS_PIN=
 
-# Anthropic
-ANTHROPIC_API_KEY=
+# ============================================
+# 🔧 OPTIONNEL (autres providers IA)
+# ============================================
 
-# Ollama (local)
+# Groq (gratuit)
+# 👉 Obtiens ta clé : https://console.groq.com/keys
+# GROQ_API_KEY=
+
+# OpenAI (payant)
+# OPENAI_API_KEY=
+
+# Anthropic (payant)
+# ANTHROPIC_API_KEY=
+
+# Ollama (local, gratuit - pas de clé nécessaire)
 # OLLAMA_URL=http://localhost:11434/v1
 # OLLAMA_MODEL=llama3.2
 
 # Optionnel: limite tokens de sortie (réduit coût/latence)
 AI_MAX_OUTPUT_TOKENS=2048
 
-# -----------------------------
-# Git
-# -----------------------------
+# ============================================
+# 📦 OPTIONNEL (Git & Workspace)
+# ============================================
+
+# Branche Git (par défaut: main)
 GIT_BRANCH=main
 
-# URL GitHub du repo (utilisé pour générer des liens de commit dans Telegram)
-GITHUB_REPO_URL=https://github.com/username/repo.git
+# URL GitHub du repo (pour générer des liens de commit dans Telegram)
+# Exemple: https://github.com/username/repo.git
+GITHUB_REPO_URL=
 
 # Dossier du repo à modifier (par défaut: dossier courant)
+# Utilise `.` pour modifier le projet Remote-Dev lui-même
+# Ou un chemin absolu vers un autre projet Git
 WORKSPACE_PATH=.
-
