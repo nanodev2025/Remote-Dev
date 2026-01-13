@@ -193,11 +193,22 @@ journalctl -u remote-dev-bot -f
 - **Zero data leak** : aucune clé/token/chemin personnel n’est hardcodé dans le code ; tout passe par `.env`.
 
 ## Lier le bot à ton GitHub
-1) Ajoute un remote :
+
+### Si WORKSPACE_PATH=. (bot modifie Remote-Dev lui-même)
+
+1) Ajoute un remote au projet Remote-Dev :
 ```bash
-git remote add origin https://github.com/nanodev2025/Remote-Dev.git
+cd Remote-Dev
+git remote add origin https://github.com/TON-USERNAME/TON-FORK-REPO.git
 ```
-2) Assure-toi que l’auth est OK (SSH ou HTTPS token) puis utilise `/deploy`.
+
+### Si WORKSPACE_PATH pointe vers un autre projet
+
+Le projet cible doit avoir son propre `remote origin` pointant vers **TON** repository GitHub (pas Remote-Dev !). Voir la section "Configuration du WORKSPACE_PATH" ci-dessus.
+
+### Authentication
+
+Assure-toi que l'auth Git est OK (SSH ou HTTPS token) puis utilise `/deploy` dans Telegram.
 
 ## Landing page (optionnel)
 
