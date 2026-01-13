@@ -1,40 +1,53 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Remote Dev — Développez depuis n’importe où</title>
-    <meta
-      name="description"
-      content="Remote Dev : votre environnement de développement dans la poche, piloté par Telegram. Envoyez une instruction, le bot modifie le code, preview instantanée, push GitHub automatique."
-    />
-    <meta name="theme-color" content="#FFFFFF" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Remote Dev — Développez depuis n’importe où" />
-    <meta
-      property="og:description"
-      content="Votre environnement de développement dans la poche, piloté par Telegram."
-    />
-    <!-- Placeholder image. Remplace par un vrai visuel -->
-    <meta property="og:image" content="/og-image.webp" />
-
-    <!-- Favicon placeholder -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    
-    <!-- Security headers (via Vercel ou serveur) -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
-    
-    <!-- Preconnect pour améliorer les performances -->
-    <link rel="preconnect" href="https://github.com" crossorigin />
-    <link rel="preconnect" href="https://t.me" crossorigin />
-  </head>
-  <body class="bg-white text-slate-900 antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garagiste de Ville</title>
+    <link rel="stylesheet" href="tailwind.config.css">
+</head>
+<body>
+    <header>
+        <nav class="flex justify-between items-center py-4">
+            <h1 class="text-3xl font-bold">Garagiste de Ville</h1>
+            <ul class="flex items-center space-x-4">
+                <li><a href="#" class="text-lg">Accueil</a></li>
+                <li><a href="#services" class="text-lg">Services</a></li>
+                <li><a href="#contact" class="text-lg">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="container mx-auto p-4 pt-6 mt-10">
+            <h2 class="text-5xl font-bold mb-4">Bienvenue chez Garagiste de Ville</h2>
+            <p class="text-lg">Nous sommes un garagiste de confiance situé au cœur de la ville. Nous proposons une gamme de services pour tous vos besoins en matière de véhicules.</p>
+        </section>
+        <section id="services" class="container mx-auto p-4 pt-6 mt-10">
+            <h2 class="text-5xl font-bold mb-4">Nos Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-100 p-4 rounded">
+                    <h3 class="text-2xl font-bold mb-2">Entretien</h3>
+                    <p class="text-lg">Nous proposons un service d'entretien complet pour votre véhicule, y compris les révisions et les réparations.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded">
+                    <h3 class="text-2xl font-bold mb-2">Réparations</h3>
+                    <p class="text-lg">Nous effectuons tous types de réparations, de la simple inspection à la réparation complète de votre véhicule.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded">
+                    <h3 class="text-2xl font-bold mb-2">Personnalisation</h3>
+                    <p class="text-lg">Nous proposons des services de personnalisation pour votre véhicule, y compris la peinture, les accessoires et les améliorations de performance.</p>
+                </div>
+            </div>
+        </section>
+        <section id="contact" class="container mx-auto p-4 pt-6 mt-10">
+            <h2 class="text-5xl font-bold mb-4">Contactez-nous</h2>
+            <form class="flex flex-col space-y-4">
+                <input type="text" placeholder="Nom" class="p-2 border border-gray-400 rounded">
+                <input type="email" placeholder="Adresse e-mail" class="p-2 border border-gray-400 rounded">
+                <textarea placeholder="Message" class="p-2 border border-gray-400 rounded"></textarea>
+                <button type="submit" class="bg-blue-500 text-white p-2 rounded">Envoyer</button>
+            </form>
+        </section>
+    </main>
+</body>
 </html>

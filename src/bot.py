@@ -338,6 +338,14 @@ class TelegramBot:
         
         logger.info("🚀 Démarrage du bot...")
         
+        # Supprimer le webhook s'il existe pour éviter les conflits
+        async def delete_webhook():
+            try:
+                await self.app.bot.delete_webhook(drop_pending_updates=True)
+                logger.info("✅ Webhook supprimé (si présent)")
+            except Exception as e:
+                logger.warning(f"⚠️ Impossible de supprimer le webhook: {e}")
+        
         # Créer un event loop pour Python 3.10+
         try:
             loop = asyncio.get_running_loop()
@@ -345,7 +353,36 @@ class TelegramBot:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
         
-        self.app.run_polling(allowed_updates=Update.ALL_TYPES)
+        # Supprimer le webhook avant de démarrer le polling
+        try:
+            loop.run_until_complete(delete_webhook())
+            # Attendre un peu pour que Telegram synchronise
+            import time
+            time.sleep(2)
+        except Exception as e:
+            logger.warning(f"⚠️ Erreur lors de la suppression du webhook: {e}")
+        
+        # Démarrer le polling avec gestion d'erreur pour les conflits
+        try:
+            self.app.run_polling(
+                allowed_updates=Update.ALL_TYPES, 
+                drop_pending_updates=True,
+                close_loop=False
+            )
+        except Exception as e:
+            if "Conflict" in str(e):
+                logger.error("❌ Conflit détecté. Attente de 5 secondes puis nouvelle tentative...")
+                import time
+                time.sleep(5)
+                # Nouvelle tentative
+                loop.run_until_complete(delete_webhook())
+                time.sleep(2)
+                self.app.run_polling(
+                    allowed_updates=Update.ALL_TYPES, 
+                    drop_pending_updates=True
+                )
+            else:
+                raise
 
     async def start_async(self) -> None:
         """Démarre le bot de manière asynchrone."""
