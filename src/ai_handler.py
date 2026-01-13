@@ -140,9 +140,12 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
             if not api_key:
                 raise ValueError("GEMINI_API_KEY non définie")
             genai.configure(api_key=api_key)
-            self.client = genai.GenerativeModel("gemini-2.0-flash")
-            self.model = "gemini-2.0-flash"
-            logger.info("✅ Client Google Gemini initialisé (gratuit!)")
+            # Important: certains modèles ont un quota gratuit à 0 selon les comptes.
+            # `models/gemini-flash-lite-latest` est généralement disponible en "free tier".
+            model_name = os.getenv("GEMINI_MODEL", "models/gemini-flash-lite-latest")
+            self.client = genai.GenerativeModel(model_name)
+            self.model = model_name
+            logger.info(f"✅ Client Google Gemini initialisé (modèle: {self.model})")
 
     def _get_workspace_structure(self) -> str:
         """Retourne la structure des fichiers du workspace."""
@@ -268,18 +271,45 @@ Si l'instruction n'est pas claire ou impossible à réaliser, réponds avec:
     async def _call_gemini(self, context: str) -> str:
         """Appelle l'API Google Gemini."""
         import asyncio
+        try:
+            # google.api_core n'est pas toujours présent selon les versions
+            from google.api_core.exceptions import ResourceExhausted  # type: ignore
+        except Exception:  # pragma: no cover
+            ResourceExhausted = None  # type: ignore
         
         full_prompt = f"{self.SYSTEM_PROMPT}\n\n{context}"
+        max_out = int(os.getenv("AI_MAX_OUTPUT_TOKENS", "2048"))
         
         def sync_call():
-            response = self.client.generate_content(
-                full_prompt,
-                generation_config={
-                    "response_mime_type": "application/json",
-                    "max_output_tokens": 4096,
-                }
-            )
-            return response.text
+            try:
+                response = self.client.generate_content(
+                    full_prompt,
+                    generation_config={
+                        "response_mime_type": "application/json",
+                        "max_output_tokens": max_out,
+                    },
+                )
+
+                # `response.text` peut échouer selon finish_reason, on tente une extraction robuste.
+                try:
+                    return response.text
+                except Exception:
+                    candidates = getattr(response, "candidates", None) or []
+                    if candidates:
+                        content = getattr(candidates[0], "content", None)
+                        parts = getattr(content, "parts", None) or []
+                        if parts and hasattr(parts[0], "text"):
+                            return parts[0].text
+                    raise
+            except Exception as e:
+                msg = str(e)
+                # Message plus actionnable en cas de quota
+                if (ResourceExhausted and isinstance(e, ResourceExhausted)) or ("Quota exceeded" in msg) or ("ResourceExhausted" in msg) or ("429" in msg):
+                    raise RuntimeError(
+                        "Quota Gemini dépassé. Essaie un modèle compatible free-tier via `GEMINI_MODEL=models/gemini-flash-lite-latest` "
+                        "ou active la facturation sur ton projet Google Cloud."
+                    ) from e
+                raise
         
         return await asyncio.get_event_loop().run_in_executor(None, sync_call)
 
