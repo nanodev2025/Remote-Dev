@@ -7,25 +7,25 @@ const LINKS = {
 const FEATURES = [
   {
     title: '1. Envoyez votre instruction',
-    desc: 'Depuis Telegram, décrivez ce que vous voulez changer.',
+    desc: 'Depuis Telegram, décrivez ce que vous voulez changer en langage naturel.',
     icon: '/icon-send.png',
-    alt: 'Icône d’envoi de message (placeholder PNG).',
+    alt: "Icône d'envoi de message (placeholder PNG).",
   },
   {
     title: '2. Le bot modifie le code',
-    desc: 'Analyse + patch de fichiers. Modifications cohérentes appliquées.',
+    desc: "L'IA analyse et applique les modifications de fichiers (create/modify/delete).",
     icon: '/icon-code.png',
     alt: 'Icône de code < /> (placeholder PNG).',
   },
   {
-    title: '3. Preview instantanée',
-    desc: 'Visualisez le résultat rapidement. Ajustez si nécessaire.',
+    title: '3. Preview du diff',
+    desc: 'Vous recevez immédiatement le diff des changements. Validez ou annulez avec /reset.',
     icon: '/icon-preview.png',
     alt: 'Icône de preview (placeholder PNG).',
   },
   {
-    title: '4. Push automatique sur GitHub',
-    desc: 'Commit + push : changements versionnés et traçables.',
+    title: '4. Déployez sur commande',
+    desc: 'Utilisez /deploy pour commit + push vers GH. Lien vers le commit inclus.',
     icon: '/icon-github.png',
     alt: 'Icône GitHub stylisée (placeholder PNG).',
   },
@@ -263,8 +263,8 @@ export default function App() {
               <span className="text-sky-600">Remote Dev</span>.
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
-              Envoyez une instruction sur Telegram. Le bot applique les changements dans votre
-              repo, vous renvoie un diff clair, puis pousse sur GitHub — sans casser votre flow.
+              Envoyez une instruction sur Telegram. Le bot applique les changements via IA, vous montre le diff, 
+              puis vous déployez sur commande avec /deploy vers GH.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -272,24 +272,8 @@ export default function App() {
             </div>
 
             <p className="mt-4 text-xs text-slate-500">
-              Slogan : <span className="text-slate-700">“Message. Patch. Commit. Repeat.”</span>
+              Slogan : <span className="text-slate-700">"Message. Patch. Commit. Repeat."</span>
             </p>
-
-            <div className="mt-8 grid grid-cols-3 gap-3">
-              {[
-                { k: 'Flat', v: 'Design minimal' },
-                { k: 'Smooth', v: 'Micro‑interactions' },
-                { k: 'Secure', v: 'User ID lock' },
-              ].map((item) => (
-                <div
-                  key={item.k}
-                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
-                >
-                  <p className="text-xs font-semibold text-slate-900">{item.k}</p>
-                  <p className="mt-1 text-xs text-slate-600">{item.v}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="relative">
@@ -330,7 +314,7 @@ export default function App() {
           <SectionHeading
             kicker="Comment ça marche"
             title="Un workflow en 4 étapes — sans friction"
-            desc="De l’idée au commit : une boucle courte, claire, et agréable à utiliser."
+            desc="De l'instruction au déploiement : une boucle courte, claire, et contrôlée."
           />
 
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
