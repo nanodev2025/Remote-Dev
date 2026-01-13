@@ -28,8 +28,8 @@ Bot Telegram open‑source qui te permet de piloter des modifications de code de
 
 ## Installation (bot)
 ```bash
-git clone <ton-repo>
-cd <ton-repo>
+git clone https://github.com/nanodev2025/Remote-Dev.git
+cd Remote-Dev
 
 python3 -m venv venv
 source venv/bin/activate
@@ -63,6 +63,116 @@ cp dot-env.example .env
 python main.py
 ```
 
+## Déploiement sur serveur (Raspberry Pi / VPS)
+
+### Installation sur Linux (Raspberry Pi, VPS, etc.)
+
+Le bot fonctionne sur n'importe quel serveur Linux avec Python 3.11+ :
+
+```bash
+# 1. Cloner le repository
+git clone https://github.com/nanodev2025/Remote-Dev.git
+cd Remote-Dev
+
+# 2. Vérifier Python (3.11+ requis)
+python3 --version
+
+# Si Python < 3.11, installer Python 3.11+ :
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3-pip
+
+# 3. Créer l'environnement virtuel et installer les dépendances
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 4. Configurer le .env
+cp dot-env.example .env
+nano .env  # Remplir avec tes clés API
+```
+
+### Configuration du WORKSPACE_PATH
+
+Par défaut, le bot modifie les fichiers dans son propre répertoire. Si tu veux qu'il modifie un autre projet :
+
+1. **Option 1 : Répertoire courant**
+   ```bash
+   # Dans .env, laisse vide ou utilise :
+   WORKSPACE_PATH=.
+   ```
+
+2. **Option 2 : Autre projet Git**
+   ```bash
+   # Dans .env :
+   WORKSPACE_PATH=/chemin/vers/ton/projet
+   
+   # Le projet cible doit être un dépôt Git initialisé :
+   cd /chemin/vers/ton/projet
+   git init
+   git remote add origin https://github.com/nanodev2025/Remote-Dev.git
+   ```
+
+### Lancer le bot au démarrage (systemd)
+
+Pour que le bot démarre automatiquement au boot du serveur :
+
+1. **Créer le service systemd** :
+   ```bash
+   sudo nano /etc/systemd/system/remote-dev-bot.service
+   ```
+
+2. **Ajouter cette configuration** (remplace `/home/pi/Remote-Dev` par ton chemin) :
+   ```ini
+   [Unit]
+   Description=Remote Dev Telegram Bot
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=pi
+   WorkingDirectory=/home/pi/Remote-Dev
+   Environment="PATH=/home/pi/Remote-Dev/venv/bin"
+   ExecStart=/home/pi/Remote-Dev/venv/bin/python3 main.py
+   Restart=always
+   RestartSec=10
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. **Activer et démarrer le service** :
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable remote-dev-bot
+   sudo systemctl start remote-dev-bot
+   
+   # Vérifier le statut
+   sudo systemctl status remote-dev-bot
+   
+   # Voir les logs
+   journalctl -u remote-dev-bot -f
+   ```
+
+### Notes pour serveurs payants (VPS)
+
+- **Firewall** : Aucune ouverture de port nécessaire (le bot utilise l'API Telegram)
+- **RAM** : 512 MB minimum recommandé
+- **Stockage** : ~100 MB pour le bot + espace pour tes projets
+- **CPU** : Léger, fonctionne même sur Raspberry Pi Zero
+- **Réseau** : Connexion internet stable requise pour l'API Telegram et les APIs IA
+
+### Logs
+
+Les logs sont écrits dans `bot.log` dans le répertoire du bot, et également dans les logs systemd :
+
+```bash
+# Logs du fichier
+tail -f bot.log
+
+# Logs systemd (si configuré comme service)
+journalctl -u remote-dev-bot -f
+```
+
 ## Commandes Telegram
 - `/start` : onboarding
 - `/help` : commandes
@@ -81,7 +191,7 @@ python main.py
 ## Lier le bot à ton GitHub
 1) Ajoute un remote :
 ```bash
-git remote add origin https://github.com/<user>/<repo>.git
+git remote add origin https://github.com/nanodev2025/Remote-Dev.git
 ```
 2) Assure-toi que l’auth est OK (SSH ou HTTPS token) puis utilise `/deploy`.
 
@@ -97,4 +207,4 @@ Ce repo contient également une landing page React dans le dossier `landing/`, u
 - template public : `dot-env.example`
 
 ## Licence
-MIT (à ajuster si besoin)
+MIT
