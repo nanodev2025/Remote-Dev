@@ -269,10 +269,20 @@ class TelegramBot:
 
     def run(self) -> None:
         """Démarre le bot (bloquant)."""
+        import asyncio
+        
         self.app = Application.builder().token(self.token).build()
         self._setup_handlers()
         
         logger.info("🚀 Démarrage du bot...")
+        
+        # Créer un event loop pour Python 3.10+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
         self.app.run_polling(allowed_updates=Update.ALL_TYPES)
 
     async def start_async(self) -> None:

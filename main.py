@@ -7,6 +7,7 @@ Point d'entrée principal
 import os
 import sys
 import logging
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Configuration du logging
@@ -75,7 +76,8 @@ def validate_env() -> dict:
 def main():
     """Point d'entrée principal."""
     # Charger les variables d'environnement
-    load_dotenv()
+    # Évite `find_dotenv()` (instable selon les versions de Python) en pointant explicitement vers `.env`
+    load_dotenv(dotenv_path=Path(__file__).with_name(".env"))
     
     print("""
     ╔══════════════════════════════════════════════════════════════╗
